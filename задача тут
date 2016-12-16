@@ -4,49 +4,49 @@
 typedef struct Word Word;
 struct Word
 {
-    int cnt;
-    char* item;
-    Word* next;
+    int cnt; // кол-во повторений 
+    char* item;  //слово 
+    Word* next;  
 };
 int Word_get(Word* Word, char* index);
 int Word_get_index(Word* Word, char* index);
 void Word_set(Word* Word, unsigned index, int item);
-Word* Word_add(Word* head, char* item)
+Word* Word_add(Word* head, char* item)  // основная функция 
 {
-    if (Word_get(head, item) == -1)
+    if (Word_get(head, item) == -1)  // проверка на существование слова в списке (его нет)
     {
-        Word* new_item = (Word*)malloc(sizeof(Word));
+        Word* new_item = (Word*)malloc(sizeof(Word)); // создаем новую структуру и выделяем под нее память 
         new_item->item = item;
         new_item->next = NULL;
         new_item->cnt = 1;
-        if (head)
+        if (head) // если получим начало списка или како-либо дпугой указатель не конца 
         {
-            Word* Word;
-            for (Word = head; Word->next; Word = Word->next)
+            Word* Word; // создаем указатель на структуру 
+            for (Word = head; Word->next; Word = Word->next) //сдвинемся в конец 
                 ;
-            Word->next = new_item;
+            Word->next = new_item; // создадим новое (созданную строку вписываем в конец списка)
         }
         else
         {
-            head = new_item;
+            head = new_item;  // в противном случае (голова null) передвинем голову в новое слово 
         }
     }
-    else
+    else // в противном случае(вернулся номер слова в списке) проиндексируй кол-во повторений (слово есть в списке)
     {
-        Word_set(head, Word_get(head, item), Word_get_index(head, item) + 1);
+        Word_set(head, Word_get(head, item), Word_get_index(head, item) + 1); //проиндексирует кол-во повторений по (индексируем текущее слово по номеру в списке 
     }
-    return head;
+    return head; // вернем голову 
 }
 
-int Word_get_index(Word* Word, char* index)
+int Word_get_index(Word* Word, char* index)  // возращаем кол-во повторений
 {
     unsigned i;
     for (i = 0; Word; Word = Word->next, i++)
-        if (strcmp(Word->item, index) == 0)
+        if (strcmp(Word->item, index) == 0)  //сравнение строк index - номер структуры word в списке 
             return Word->cnt;
     return -1;
 }
-int Word_get(Word* Word, char* index)
+int Word_get(Word* Word, char* index) // проверка на существование слова в списке и если есть то возращает номер в списке 
 {
     unsigned i;
     for (i = 0; Word; Word = Word->next, i++)
@@ -58,23 +58,26 @@ int Word_get(Word* Word, char* index)
     }
     return -1;
 }
-void Word_set(Word* Word, unsigned index, int item)
+void Word_set(Word* Word, unsigned index, int item)  // индексирование кол-ва повторений по номеру в списке 
 {
     unsigned i;
-    for (i = 0; Word; Word = Word->next, i++)
+    for (i = 0; Word; Word = Word->next, i++)  
         if (i == index)
         {
             Word->cnt = item;
             return;
         }
 }
-void Word_print(Word* Word)
+void Word_print(Word* Word)  //вывод результата в файл 
 {
+	FILE *p;
+	p = fopen("output.txt", "w");
     for (; Word; Word = Word->next)
-        printf("%s %d->\n", Word->item, Word->cnt);
+        fprintf(p, "%s - %d\n", Word->item, Word->cnt);
     printf("NULL\n");
+    fclose(p);
 }
-void Word_destroy(Word* Word)
+void Word_destroy(Word* Word)   // освобождение памяти из-под массивов 
 {
     if (Word)
     {
@@ -85,45 +88,31 @@ void Word_destroy(Word* Word)
 int main()
 {
     Word* Word = NULL;
-    int n, k = 0, i = 0;
-    char* t;
-    char tmp[1025];
-    FILE* p = fopen("input.txt", "r");
-    char** mas = (char**)malloc(n * sizeof(char*));
+    int n, i = 0;  
+    char* t;  //слово 
+    char tmp[1025];  // строка 
+    FILE* p = fopen("input.txt", "r");  //открываем файл для считывания 
+    char** mas = (char**)malloc(n * sizeof(char*));  // создаем два массива и выделяем под них память (массивы строк )
     char** mas_copy = (char**)malloc(n * sizeof(char*));
-    for (n = 0; fgets(tmp, sizeof(tmp), p); n++)
+    for (n = 0; fgets(tmp, sizeof(tmp), p); n++)   // цикл считывания строк 
     {
         int len = strlen(tmp);
         mas[n] = strdup(tmp);
         mas_copy[n] = strdup(tmp);
     }
     fclose(p);
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++)    // по всему множеству строк 
     {
-        t = strtok(mas_copy[i], " ,.-");
-        while (t != NULL)
+        t = strtok(mas_copy[i], " ,.-"); //выделяет лексему из строки мас копи - массив строк 
+        while (t != NULL) // условие прерывания т.е. окончание всего текста 
         {
-            if ((t[0] >= 'A') && (t[0] <= 'Z'))
-            {
-                Word = Word_add(Word, t);
-                k++;
-            }
-            t = strtok(NULL, " ,.-");
+            Word = Word_add(Word, t);    // проверяем есть ли такая лексема в списке если нет то создаем новую если есть то +1 к счетчику слов 
+            t = strtok(NULL, " ,.-");    // обнуляем 
         }
     }
-    Word_print(Word);
-    printf("k = %d\n", k);
-    p = fopen("output.txt", "w");
-    if (p != NULL)
-    {
-        for (i = 0; i < n; i++)
-        {
-            fprintf(p, "%s", mas[i]);
-            free(mas[i]);
-        }
-        fclose(p);
-    }
-    free(mas);
+    Word_print(Word);  // вывод поолучившихся данных в файл 
+    free(mas);  // освобождение памяти 
     free(mas_copy);
+    system ("pause");  // остановка для просмотра 
     return 0;
 }
